@@ -1,25 +1,17 @@
 # 🚀🚀🚀 redux 及部分中间件的实现 🙂
 ## 🔨 redux 实现 [整篇文章代码完整链接](./src/redux-mini)
 
-### 内容目录
 #### 1. redux 简介
-#### 2. redux 通信方式流程图
-#### 3. redux 简版实现
-#### 4. redux 中 combinReducers 实现
-#### 5. 实现 applyMiddleware 中间件机制
-#### 6. 实现 bindActionCreators 
-
-1. redux 简介
     - 是 react 组件通信方式之一，使组件在状态变更时变得可预测，可控制
     - 整个应用状态存在唯一的 store 中
     - 变更状态只能通过组件派发(dispatch)行为(action)给 store，由纯函数 reducer 接收并返回新的状态
     - 组件通过发布订阅的方式来刷新自己的视图
 
-2. redux 通信方式流程图👇👇👇
+#### 2. redux 通信方式流程图👇👇👇
 
     ![redux](./redux.png)
 
-3. redux 简版实现
+#### 3. redux 简版实现
     
     3.1 redux 会通过 createStore 生成 store
     ```
@@ -155,7 +147,7 @@
 
     ![redux2](./redux2.png)
 
-4. redux 中 combinReducers 实现
+#### 4. redux 中 combinReducers 实现
 
     通常在一个项目中肯定不止一个状态需要变更，而是多个状态，每个状态对应的信息又会有不同，
     
@@ -317,7 +309,7 @@
 
     ![redux3](./redux3.png)
 
-5. 实现 applyMiddleware 中间件机制
+#### 5. 实现 applyMiddleware 中间件机制
 
     到这里一个基本的 redux 就实现了，不过还是有一个问题，目前实现的 redux 中的 dispatch 函数只支持对象形式，
 
@@ -415,7 +407,7 @@
 
     打印出了相应的日志记录✌
 
-6. 实现 bindActionCreators 
+#### 6. 实现 bindActionCreators 
 
     上面 redux API 实现的基本都实现了，还剩下最后一个 API: bindActionCreators。该函数主要是配合 react-redux 使用
 
@@ -444,14 +436,9 @@
 
 ## 🔨 redux 中间件实现
 
-### 内容目录
+#### 1. 中间件简介
 
-#### 1. 中间件 redux-thunk 实现
-#### 2. 中间件 redux-promise 实现
-#### 3. 中间件 redux-logger 实现
-#### 4. 中间件测试
-
-关于 redux 中间件的形式在[redux 中文文档里有描述](https://www.redux.org.cn/docs/advanced/Middleware.html)，
+关于 redux 中间件的表现形式在[redux 中文文档里有描述](https://www.redux.org.cn/docs/advanced/Middleware.html)，
 
 在上面实现 applyMiddleware 时，可以知道中间件的表现形式大概是这样的
 
@@ -459,7 +446,7 @@
 
  为了方便理解些，下面实现没有采用箭头函数的方式
 
-1. 中间件 redux-thunk 实现 [原版源码](https://github.com/reduxjs/redux-thunk/blob/master/src/index.js)
+#### 2. 中间件 redux-thunk 实现 [原版源码](https://github.com/reduxjs/redux-thunk/blob/master/src/index.js)
     ```
     // redux-thunk 中间件让 dispatch 支持函数和异步形式，主要对传入的 action 进行类型判断，它的简版实现方式为
     function thunk({ getState, dispatch }){
@@ -474,7 +461,7 @@
         }
     }
     ```
-2. 中间件 redux-promise 实现 [原版源码](https://github.com/redux-utilities/redux-promise/blob/master/src/index.js)
+#### 3. 中间件 redux-promise 实现 [原版源码](https://github.com/redux-utilities/redux-promise/blob/master/src/index.js)
     ```
     // 该中间件让 dispatch 支持 promise 形式，同 redux-thunk 一样也是判断 action 类型
     // 只不过一个是判断函数，一个是 promise
@@ -494,7 +481,7 @@
         }
     }
     ```
-3. 中间件 redux-logger 实现 [原版源码](https://github.com/LogRocket/redux-logger/blob/master/src/index.js)
+#### 4. 中间件 redux-logger 实现 [原版源码](https://github.com/LogRocket/redux-logger/blob/master/src/index.js)
     ```
     // 该中间件负责打印日志记录，所以主要调用的是 getState 函数获取状态值
     function logger({ getState }){
@@ -516,7 +503,7 @@
         }
     }
     ```
-4. 中间件测试
+#### 5. 中间件测试
 
     接下来看看实现的中间件是否能正常工作，
     
@@ -533,9 +520,19 @@
 
     虽然没那么美观，不过也可以用了✌
 
-    到这里一个简版的 redux 包括一些中间件就基本实现了，发现哪里出错或有问题的欢迎您评论区留言
+## 总结
 
-    或提 issue ：) 
+到这里一个简版的 redux 包括一些中间件就基本实现了，发现哪里出错或有问题的欢迎您评论区留言
+
+或提 issue ：) [仓库地址](https://github.com/cao-lianhui/react-study-notes/tree/main/src/redux-mini)
+
+## 参考链接
+
+[1.阮一峰-Redux 入门教程（一）：基本用法](https://www.ruanyifeng.com/blog/2016/09/redux_tutorial_part_one_basic_usages.html)
+
+[2.Redux 进阶教程](https://github.com/kenberkeley/redux-simple-tutorial/blob/master/redux-advanced-tutorial.md)
+
+[3.redux 中文文档](https://www.redux.org.cn/)
 
 
 
