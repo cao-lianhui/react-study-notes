@@ -243,7 +243,7 @@
     }
     ```
 
-5.1  combineReducers 测试
+4.1  combineReducers 测试
 
 修改 store/index.js
 
