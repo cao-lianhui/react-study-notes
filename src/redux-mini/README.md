@@ -102,7 +102,6 @@
         componentDidMount(){
             // 注册监听事件
             this.cancel = store.subscribe(() => {
-                console.log('进来了')
                 // 状态变更时更新视图
                 this.forceUpdate()
             })
@@ -193,14 +192,12 @@
 
     状态中有三个属性需要变更，每个属性之间没有联系，变更的方式可能会不同，所以需要创建
 
-    多个 reducer，每个 reducer 返回对应的属性状态。但在 redux 中，store 只生成一次，也就是
+    多个 reducer，每个 reducer 返回对应的属性状态。但在 redux 中createStore 中只传入单
     
-    createStore 中只传入单个 reducer，所以我们需要把创建的多个 reducer 合并成单个，
-    
-    称为 combineReducers。
+    个 reducer，所以我们需要把创建的多个 reducer 合并成单个，称为 combineReducers。
 
     ```
-    // combineReducers 实现
+    // combineReducers 接收一个 reducer 组成的对象集合
     // 传入的 reducers 对象中的属性必须与 state 属性名相同，否则无法获取到对应的 reducer 修改状态
     function combineReducers(reducers){
         return function combination(state = {}, action){
@@ -228,11 +225,13 @@
     }
 
     ```
-    上面代码除了 ts 和一些异常处理之外，实现方式基本是按 redux 源码搬过来的，阮一峰老师博客是通过 reduce
+    上面代码除了 ts 和一些异常处理之外，实现方式基本是按 redux 源码搬过来的，
+    
+    阮一峰老师博客是通过 reduce：[链接👉](https://www.ruanyifeng.com/blog/2016/09/redux_tutorial_part_one_basic_usages.html)
 
     来实现的，代码如下：👇👇👇
     ```
-    // 链接👉：https://www.ruanyifeng.com/blog/2016/09/redux_tutorial_part_one_basic_usages.html
+    
     const combineReducers = reducers => {
         return (state = {}, action) => {
             return Object.keys(reducers)
@@ -319,11 +318,11 @@
 
     到这里一个基本的 redux 就实现了，不过还是有一个问题，目前实现的 redux 中的 dispatch 函数只支持对象形式，
 
-    都是同步的，并不支持异步的方式，在实际项目中肯定少不了接口请求，还有分离日志记录、崩溃报告等等，这时就需要通过中间件来加强 dispatch 函数，
+    都是同步的，并不支持异步的方式，在实际项目中肯定少不了接口请求，还有分离日志记录、崩溃报告等等，这时就需要通过一个中间件机制来加强 dispatch 函数，
 
     在 redux 里通过 applyMiddleware 来引增强 dispatch 函数，
 
-    👉[redux中文文档里有描述 applyMiddleware 的由来](https://www.redux.org.cn/docs/advanced/Middleware.html)
+    👉[redux中文文档里有描述 applyMiddleware 的由来](https://www.redux.org.cn/docs/advanced/Middleware.html)，摘抄下面三段：
 
     - applyMiddleware只暴露一个 store API 的子集给 middleware：dispatch(action) 和 getState()。
 
@@ -331,7 +330,7 @@
 
     - 为了保证你只能应用 middleware 一次，它作用在 createStore() 上而不是 store 本身。因此它的签名不是 (store, middlewares) => store， 而是 (...middlewares) => (createStore) => createStore。
 
-    上面一段话总结下来，该中间件机制的实现需要把 createStore 作为参数传进去，在 applyMiddleware 里调用 
+    上面三段话总结下来，该中间件机制的实现需要把 createStore 作为参数传进去，在 applyMiddleware 里调用 
 
     createStore 获取 store，然后进行 dispatch 函数加强。嗯，就是这样🤔
 
