@@ -436,6 +436,13 @@
 
 ## 🔨 redux 中间件实现
 
+### 目录
+
+[1.中间件 redux-thunk 实现](./README.md#453)
+[2.中间件 redux-promise 实现](./README.md#468)
+[3.中间件 redux-logger 实现](./README.md#488)
+[4.中间件测试](./README.md#511)
+
 关于 redux 中间件的形式在[redux 中文文档里有描述](https://www.redux.org.cn/docs/advanced/Middleware.html)，
 
 在上面实现 applyMiddleware 时，可以知道中间件的表现形式大概是这样的
@@ -520,7 +527,9 @@
 
     到这里一个简版的 redux 包括一些中间件就基本实现了，发现哪里出错或有问题的欢迎您评论区留言
 
-    或提 issue ：)
+    或提 issue ：) 
+
+
 
 
 
