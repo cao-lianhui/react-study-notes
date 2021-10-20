@@ -25,7 +25,7 @@ export default function createStore(reducer, enhancer){
     function dispatch(action){
         // 接收 state 和 action，返回最新的 state
         currentState = reducer(currentState, action);
-        console.log(currentState, action.type);
+        // console.log(currentState, action.type);
         // 返回新的 state 后需要触发订阅事件，使视图更新
         currentListeners.forEach(lis => lis());
     }

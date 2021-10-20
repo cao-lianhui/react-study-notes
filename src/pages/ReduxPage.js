@@ -27,12 +27,23 @@ export default class ReduxPage extends Component{
     }
 
     handleMSG = () => {
-        store.dispatch({ type: 'MSG', payload: '信息' })
+        // store.dispatch({ type: 'MSG', payload: '信息' })
+        // dispatch 传入函数
+        store.dispatch((dispatch, getState) => {
+            setTimeout(() => {
+                dispatch({ type: 'MSG', payload: '信息' })
+            }, 1000)
+        })
     }
     handleCOUNT = () => {
-        store.dispatch({ type: 'COUNT', payload: 1 })
+        // store.dispatch({ type: 'ADD', payload: 1 })
+        store.dispatch(Promise.resolve({
+            type: 'ADD',
+            payload: 1
+        }))
     }
     handleBOOL = () => {
+        // dispatch 传入 promise
         store.dispatch({ type: 'BOOL', payload: 'bool' })
     }
 
@@ -46,8 +57,8 @@ export default class ReduxPage extends Component{
                 <div>bool:{ store.getState().bool }</div>
                 {/* <button onClick={this.handleAdd}>+</button>
                 <button onClick={this.handleMinus}>-</button> */}
-                <button onClick={this.handleMSG}>msg</button>
-                <button onClick={this.handleCOUNT}>count</button>
+                <button onClick={this.handleMSG}>msg-异步函数形式</button>
+                <button onClick={this.handleCOUNT}>count-add-promise形式</button>
                 <button onClick={this.handleBOOL}>bool</button>
             </div>
         )

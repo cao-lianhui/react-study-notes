@@ -1,5 +1,5 @@
-# 🚀🚀🚀redux、react-redux 及部分中间件的实现 🙂
-## 🔨 redux 实现
+# 🚀🚀🚀 redux 及部分中间件的实现 🙂
+## 🔨 redux 实现 [整篇文章代码完整链接](./src/redux-mini)
 
 1. redux 简介
     - 是 react 组件通信方式之一，使组件在状态变更时变得可预测，可控制
@@ -64,24 +64,18 @@
     }
     ```
 
-4. 测试实现的 redux，仍然是用计数器作为例子(该例子如有雷同纯属必然😜)
+    3.1 测试实现的 redux，仍然是用计数器作为例子(该例子如有雷同纯属必然😜)
 
-    4.1 创建 store.js
+    3.1.1 创建 store/index.js
     ```
     import { createStore } from '../redux-mini';
     // 初始化 state
-    const initState = {
-        count: 0
-    }
+    const initState = 0
     // 声明一个计数器 reducer
     const countReducer = (state = initState, { type, payload }) => {
         switch(type){
-            case 'ADD': return Object.assign(state, {
-                count: state.count + payload
-            });
-            case 'MINUS': return Object.assign(state, {
-                count: state.count - payload
-            });
+            case 'ADD': return state + payload
+            case 'MINUS': return state - payload
             default: return state;
         }
     }
@@ -91,7 +85,7 @@
 
     ```
 
-    4.2 创建 ReduxPage.js 组件，并在 index.js 中引入该组件
+    3.1.2 创建 ReduxPage.js 组件，并在 index.js 中引入该组件
     ```
     // ReduxPage.js
     import { Component } from 'react';
@@ -145,7 +139,7 @@
     );
     ```
 
-    4.3 如图浏览器中显示的结果，连续派发多次 action 后，视图对应变更，
+    3.1.3 如图浏览器中显示的结果，连续派发多次 action 后，视图对应变更，
     
     状态打印在浏览器控制台，第一次打印 undefined，为 dispatch 
     
@@ -153,7 +147,7 @@
 
     ![redux2](./redux2.png)
 
-5. redux 中 combinReducers 实现
+4. redux 中 combinReducers 实现
 
     通常在一个项目中肯定不止一个状态需要变更，而是多个状态，每个状态对应的信息又会有不同，
     
@@ -245,8 +239,9 @@
     ```
 
     5.1  combineReducers 测试
+
+    修改 store/index.js
     ```
-    // 修改 store.js
     const multiState = {
         msg: '状态',
         count: 0,
@@ -262,10 +257,9 @@
     }
     const couReducer = (state = multiState.count, { type, payload }) => {
         switch(type){
-            case 'COUNT':
-                return state + payload;
-            default: 
-            return state;
+            case 'ADD': return state + payload;
+            case 'MINUS': return state - payload;
+            default: return state;
         }
     }
     const boolReducer = (state = multiState.bool, { type, payload }) => {
@@ -284,13 +278,14 @@
     })
     const store = createStore(rootReducer);
     export default store;
-
-    // 修改 ReduxPage.js 增加了三个函数和对应的状态显示
+    ```
+    修改 ReduxPage.js 增加了三个函数和对应的状态显示
+    ```
     handleMSG = () => {
         store.dispatch({ type: 'MSG', payload: '信息' })
     }
     handleCOUNT = () => {
-        store.dispatch({ type: 'COUNT', payload: 1 })
+        store.dispatch({ type: 'ADD', payload: 1 })
     }
     handleBOOL = () => {
         store.dispatch({ type: 'BOOL', payload: 'bool' })
@@ -314,7 +309,7 @@
 
     ![redux3](./redux3.png)
 
-6. 实现 applyMiddleware 中间件机制
+5. 实现 applyMiddleware 中间件机制
 
     到这里一个基本的 redux 就实现了，不过还是有一个问题，目前实现的 redux 中的 dispatch 函数只支持对象形式，
 
@@ -332,9 +327,200 @@
 
     上面三段话总结下来，该中间件机制的实现需要把 createStore 作为参数传进去，在 applyMiddleware 里调用 
 
-    createStore 获取 store，然后进行 dispatch 函数加强。嗯，就是这样🤔
+    createStore 获取 store，然后收集 store 的一些子集 API，并对 dispatch 函数加强。嗯，就是这样🤔
 
-    接下来进入 createStore.js 修改该函数。
+    接下来进入 createStore.js 修改该函数。在原来的基础上做了两处修改，这里直接截图：
+
+    ![redux4.png](./redux4.png)
+
+    上面函数修改好后，新建 applyMiddleware 文件，实现该中间件机制，具体看代码注释：)
+    ```
+    /**
+    * 
+    * @param  {...any} middlewares 传入的中间件集合
+    * 比如：applyMiddleware(thunk, logger)
+    */
+    export default function applyMiddleware(...middlewares){
+        // 传入 createStore 获取 store 和一些子集 API
+        return function (createStore){
+            // 传入 reducer，最后返回 store 和增强的 dispatch
+            return function (reducer){
+                // 获取 store 最后需要返回
+                const store = createStore(reducer);
+                // 获取 dispatch 函数
+                let dispatch = store.dispatch;
+                // 暴露一些 store API 给中间件，reudx 源码内也是这样写的
+                const midAPI = {
+                    getState: store.getState,
+                    dispatch: (action, ...args) => dispatch(action, ...args)
+                }
+                // 遍历中间件函数，增强 dispatch
+                // 这里我用了 redux  中文文档描述的形式，直接 forEach 遍历
+                // redux 源码采用的是组合 compose 形式，用 reduce 遍历形成链式调用
+                middlewares.forEach(middleware => {
+                    // middleware 表示 logger 或 thunk 这些 redux 中间件
+                    // 中间件最终会返回新的 dispatch 函数，改变原始的 dispatch，
+                    // 改变的 dispatch 在作为参数传入，这样一层层叠加，形成链式调用的效果
+                    dispatch = middleware(midAPI)(dispatch)
+                    // 每个中间件的形式大概是下面这样的，最后返回新的 dispatch
+                    // dispatch = ({ getState, dispatch }) => ( dispatch ) => action => {}
+                    // 比如中间件 middlewares 的集合为[M1, M2, M3]
+                    // 最后的返回结果从左向右包裹为 M3(M2(M1(dispatch)))
+                    // 源码里compose 形式为从右向左包裹返回 M1(M2(M3(dispatch)))
+                })
+                // 返回 store, 增强后的 dispatch
+                return {
+                    ...store,
+                    dispatch
+                }
+            }
+        }
+    }
+    ```
+
+    上面实现了 applyMiddleware 函数，接下测试下能不能正常使用
+    
+    先安装三个 redux 中间件
+
+    ```
+    yarn add redux-thunk redux-logger redux-pormise -D
+    ```
+
+    修改 store/index.js 文件
+
+    引入三个中间件和 applyMiddleware 函数
+
+    ![redux5](./redux5.png)
+
+    再修改 createStore 函数
+
+    ![redux6](./redux6.png)
+
+    接下来还要对 ReduxPage.js 进行下改动
+
+    ![redux7](./redux7.png)
+
+    最后的结果图
+    ![redux8](./redux8.png)
+
+    可以看到浏览器中 redux 可以支持函数和 promise 形式进行状态变更，同时浏览器控制台
+
+    打印出了相应的日志记录✌
+
+6. 实现 bindActionCreators 
+
+    上面 redux API 实现的基本都实现了，还剩下最后一个 API: bindActionCreators。该函数主要是配合 react-redux 使用
+
+    作用是把一个不带 dispatch 的函数升级为 dispatch(func(...args))，注意 func 返回值为 action
+
+    ```
+    // bindActionCreators 实现，也是参照源码来的🙂
+    export default function bindActionCreators(creators, dispatch){
+        const bindCreators = {}
+        for(const key in creators){
+            if(typeof creators[key] === 'function'){
+                // 在这里接收带有 dispatch 的函数
+                bindCreators[key] = bindActionCreator(creators[key], dispatch);
+            }
+        }
+        return bindCreators;
+    }
+
+    // 为函数添加上 dispatch
+    function bindActionCreator(creators, dispatch){
+        return (...args) => dispatch(creators(...args))
+    }
+    ```
+
+    到这里 redux 的所有 API 就都实现了，接下来我们可以手动实现上面安装过的三个中间件，顺便测试下简版的 redux
+
+## 🔨 redux 中间件实现
+
+关于 redux 中间件的形式在[redux 中文文档里有描述](https://www.redux.org.cn/docs/advanced/Middleware.html)，
+
+在上面实现 applyMiddleware 时，可以知道中间件的表现形式大概是这样的
+
+ ({ getState, dispatch }) => (next) => (action) => { /*中间件要处理的事情*/ }
+
+ 为了方便理解些，下面实现没有采用箭头函数的方式
+
+1. 中间件 redux-thunk 实现 [原版源码](https://github.com/reduxjs/redux-thunk/blob/master/src/index.js)
+    ```
+    // redux-thunk 中间件让 dispatch 支持函数和异步形式，主要对传入的 action 进行类型判断，它的简版实现方式为
+    function thunk({ getState, dispatch }){
+        return function(next){
+            return function(action){
+                if(typeof action === 'function'){
+                    // 判断如何 action 类型为函数，则向该函数传入 dispatch 和 getState
+                    return action(dispatch, getState)
+                }
+                return next(action)
+            }
+        }
+    }
+    ```
+2. 中间件 redux-promise 实现 [原版源码](https://github.com/redux-utilities/redux-promise/blob/master/src/index.js)
+    ```
+    // 该中间件让 dispatch 支持 promise 形式，同 redux-thunk 一样也是判断 action 类型
+    // 只不过一个是判断函数，一个是 promise
+    // 这里我安装了一个插件 is-promise 判断是否为 promise
+    // yarn add is-promise -D
+    // import isPromise from 'is-promise'
+    function promise({ dispatch }){
+        return function (next){
+            return function (action){
+                if(isPromise(action)){
+                    // 判断 action 是否为 promise，是则通过 .then 获取返回的 action，传入dispatch
+                    // 源码里还判断了 action.payload 是否为 promise，代码也很简洁，可以去源码看看
+                    return action.then(dispatch)
+                }
+                return next(action);
+            }
+        }
+    }
+    ```
+3. 中间件 redux-logger 实现 [原版源码](https://github.com/LogRocket/redux-logger/blob/master/src/index.js)
+    ```
+    // 该中间件负责打印日志记录，所以主要调用的是 getState 函数获取状态值
+    function logger({ getState }){
+        return function(next){
+            return function(action){
+                console.log('**********************************');
+                console.log(action.type + '执行了！');
+                // 获取上一个 state
+                const prevState = getState();
+                console.log('prev state', prevState);
+                // 获取下一个 state
+                // returnedValue 变量声明和源码来相同
+                const returnedValue = next(action);
+                const nextState = getState();
+                console.log('next state', nextState);
+                console.log('**********************************');
+                return returnedValue
+            }
+        }
+    }
+    ```
+4. 中间件测试
+
+    接下来看看实现的中间件是否能正常工作，
+    
+    修改 store/index.js，把三个中间件函数都写入该文件中，记得要引入 is-promise
+
+    ![redux10](./redux10.png)
+    ![redux11](./redux11.png)
+
+    其他地方不需要修改，结果图如下：👇👇👇
+
+    ![redux9](./redux9.png)
+
+    可以看到引入自己实现的中间件后，dispatch 仍然支持函数和 promise 形式，浏览器也打印了日志记录，
+
+    虽然没那么美观，不过也可以用了✌
+
+    到这里一个简版的 redux 包括一些中间件就基本实现了，发现哪里出错或有问题的欢迎您评论区留言
+
+    或提 issue ：)
 
 
 
@@ -343,4 +529,12 @@
 
 
 
-## 🔨 react-redux 实现
+
+
+
+
+
+
+
+
+
