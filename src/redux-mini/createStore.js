@@ -9,7 +9,12 @@
  *  4.3. subscribe: 监听订阅事件
  */
 
-export default function createStore(reducer){
+export default function createStore(reducer, enhancer){
+    if(enhancer){
+        // 在这里把 createStore 作为参数传入 enhancer
+        // 返回的函数接收 reducer 作为参数，该函数最后返回的仍然是状态容器 store
+        return enhancer(createStore)(reducer);
+    }
     let currentState;
     // 该数组用于存储所有订阅事件
     let currentListeners = [];
